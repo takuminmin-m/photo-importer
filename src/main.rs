@@ -43,11 +43,21 @@ fn main() {
     println!("{:?}", target_dir);
 
     let target_dir_photos: HashSet<PathBuf> = target_dir.photo_filenames.iter().cloned().collect();
-    let mut target_photos = Vec::<&PathBuf>::new();
-    for f in camera_dir.photo_filenames.iter() {
-        if !target_dir_photos.contains(f) {
-            target_photos.push(f);
+    let mut target_photos = Vec::<(&PathBuf, exif::Exif)>::new();
+    for path in camera_dir.photo_filenames.iter() {
+        if !target_dir_photos.contains(path) {
+            let file = fs::File::open(path).unwrap();
+            let mut buf_reader = std::io::BufReader::new(file);
+            let exif_reader = exif::Reader::new();
+            let exif;
+            match exif_reader.read_from_container(&mut buf_reader) {
+                Ok(e) => { exif = e; },
+                Err(_) => { continue; }
+            }
+
+            target_photos.push((path, exif));
         }
     }
+
 
 }
