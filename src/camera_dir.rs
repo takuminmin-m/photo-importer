@@ -10,7 +10,7 @@ pub struct CameraDir {
 impl CameraDir {
     pub fn new(camera_path: &String, enabled_ext: &Vec<String>) -> CameraDir {
         assert!(
-            PathBuf::from(camera_path).exists(),
+            PathBuf::from(camera_path).is_dir(),
             "Given camera path does not exist."
         );
 
