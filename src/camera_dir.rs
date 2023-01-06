@@ -9,16 +9,20 @@ pub struct CameraDir {
 
 impl CameraDir {
     pub fn new(camera_path: &String, enabled_ext: &Vec<String>) -> CameraDir {
+        let pathbuf = PathBuf::from(camera_path);
+
         assert!(
-            PathBuf::from(camera_path).is_dir(),
+            pathbuf.is_dir(),
             "Given camera path does not exist."
         );
 
-        let photo_filenames = Self::search_photos(PathBuf::from(camera_path), enabled_ext);
-        return CameraDir { path: PathBuf::from(camera_path), photo_filenames: photo_filenames, enabled_ext: enabled_ext.clone() }
+        println!("check: Given path {:?} exists.", &pathbuf);
+
+        let photo_filenames = Self::search_photos(&pathbuf, enabled_ext);
+        return CameraDir { path: pathbuf, photo_filenames: photo_filenames, enabled_ext: enabled_ext.clone() }
     }
 
-    fn search_photos(camera_path: PathBuf, enabled_ext: &Vec<String>) -> Vec<PathBuf> {
+    fn search_photos(camera_path: &PathBuf, enabled_ext: &Vec<String>) -> Vec<PathBuf> {
         let mut photo_filenames = Vec::<PathBuf>::new();
         Self::enum_photos(&mut photo_filenames, &camera_path, enabled_ext);
 
