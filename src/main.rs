@@ -59,5 +59,35 @@ fn main() {
         }
     }
 
+    let first_elem = &target_photos[0];
+    let res = get_date_path(&target_dir.path, &first_elem.1);
+    println!("{:?}", res.unwrap());
+}
 
+fn get_date_path(target_dir_pathbuf: &PathBuf, exif: &exif::Exif) -> Option<PathBuf> {
+    let datetime_value;
+    match exif.get_field(exif::Tag::DateTimeOriginal, exif::In::PRIMARY) {
+        Some(datetime) => { datetime_value = datetime.display_value().to_string(); },
+        None => { return None },
+    }
+
+    let yymmdd = parse_to_yymmdd(&datetime_value);
+    let mut path_string = target_dir_pathbuf.clone().into_os_string().into_string().unwrap();
+    path_string += "/";
+    path_string += &yymmdd.0;
+    path_string += "/";
+    path_string += &yymmdd.1;
+    path_string += "/";
+    path_string += &yymmdd.2;
+
+    return Some(PathBuf::from(path_string));
+}
+
+fn parse_to_yymmdd(datetime_value: &String) -> (String, String, String) {
+    let mut res = ("".to_string(), "".to_string(), "".to_string());
+    res.0 = datetime_value[0..4].to_string();
+    res.1 = datetime_value[5..7].to_string();
+    res.2 = datetime_value[8..10].to_string();
+
+    return res;
 }
