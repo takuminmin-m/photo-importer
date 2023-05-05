@@ -12,7 +12,7 @@ impl CameraDir {
         let pathbuf = PathBuf::from(camera_path);
 
         assert!(
-            pathbuf.is_dir(),
+            pathbuf.exists(),
             "Given camera path does not exist."
         );
 
@@ -30,8 +30,17 @@ impl CameraDir {
     }
 
     fn enum_photos(photo_filenames: &mut Vec<PathBuf>, target_path: &PathBuf, enabled_ext: &Vec<String>) {
-        let files = target_path.read_dir().unwrap();
+        let files;
+        match target_path.read_dir() {
+            Ok(v) => { files = v; },
+            Err(_) => return,
+        }
+
         for dir_entry in files {
+            if dir_entry.is_err() {
+                continue;
+            }
+
             let path = dir_entry.unwrap().path();
             if path.is_dir() {
                 Self::enum_photos(photo_filenames, &path, enabled_ext);

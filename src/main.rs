@@ -8,17 +8,42 @@ mod camera_dir;
 
 
 fn main() {
-    let DEFAULT_TARGET_PATH: String = "~/Pictures".to_string();
-    let DEFAULT_ENABLED_EXT: Vec<String> = vec![
-        "jpg".to_string(),
-        "JPG".to_string(),
-        "jpeg".to_string(),
-        "JPEG".to_string(),
-        "png".to_string(),
-        "PNG".to_string(),
-        "mp4".to_string(),
-        "MP4".to_string(),
+    let home_dir;
+    match env::var("HOME") {
+        Ok(v) => { home_dir = v; },
+        Err(_) => {
+            println!("Could not read $HOME.");
+            return
+        }
+    }
+    let default_taregt_path = home_dir + "/Pictures";
+    let default_enabled_ext_str = vec![
+        "jpg",
+        "JPG",
+        "jpeg",
+        "JPEG",
+        "png",
+        "PNG",
+        "mp4",
+        "MP4",
+        "CR2",
+        "CR3",
+        "CRW",
+        "RAF",
+        "RWL",
+        "DNG",
+        "NEF",
+        "NRW",
+        "ORF",
+        "RW2",
+        "PEF",
+        "X3F",
+        "ARW",
+        "SR2",
+        "SRF",
     ];
+
+    let default_enabled_ext = default_enabled_ext_str.iter().map(|&str| str.to_string()).collect();
 
 
     let args: Vec<String> = env::args().collect();
@@ -31,16 +56,13 @@ fn main() {
     let target_path = if args.len()-1 == 2 {
         &args[2]
     } else {
-        &DEFAULT_TARGET_PATH
+        &default_taregt_path
     };
     let camera_path = &args[1];
-    let enabled_ext = &DEFAULT_ENABLED_EXT;
+    let enabled_ext = &default_enabled_ext;
 
     let camera_dir = CameraDir::new(camera_path, enabled_ext);
     let target_dir = CameraDir::new(target_path, enabled_ext);
-
-    println!("{:?}", camera_dir);
-    println!("{:?}", target_dir);
 
     let target_dir_photos: HashSet<PathBuf> = target_dir.photo_filenames.iter().cloned().collect();
     let mut target_photos = Vec::<(&PathBuf, exif::Exif)>::new();
@@ -59,9 +81,34 @@ fn main() {
         }
     }
 
-    let first_elem = &target_photos[0];
-    let res = get_date_path(&target_dir.path, &first_elem.1);
-    println!("{:?}", res.unwrap());
+    let mut copied_file_num = 0;
+    for (origin_path, exif) in target_photos {
+        let target_photo_dir = get_date_path(&target_dir.path, &exif).unwrap();
+        let mut new_path = target_photo_dir.clone();
+        new_path.push(origin_path.file_name().unwrap());
+        if new_path.is_file() {
+            continue;
+        }
+
+        print!("{:?} ---> {:?} | moving......", origin_path, new_path);
+        match fs::create_dir_all(&target_photo_dir) {
+            Ok(_) => (),
+            Err(_) => {
+                println!("   canceled.");
+                continue;
+            }
+        }
+
+        match fs::copy(origin_path, new_path) {
+            Ok(_) => {
+                println!("   done!");
+                copied_file_num += 1;
+            },
+            Err(_) => println!("   canceled.")
+        }
+    }
+
+    println!("{} files has copied!", copied_file_num);
 }
 
 fn get_date_path(target_dir_pathbuf: &PathBuf, exif: &exif::Exif) -> Option<PathBuf> {
