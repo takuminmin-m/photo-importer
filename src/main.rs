@@ -1,10 +1,12 @@
 use std::collections::HashSet;
 use std::env;
 use std::fs;
+use std::io::{ BufReader, Read, Seek, SeekFrom };
 use std::path::PathBuf;
 
 use crate::camera_dir::CameraDir;
 mod camera_dir;
+mod raw;
 
 
 fn main() {
@@ -72,9 +74,19 @@ fn main() {
             let mut buf_reader = std::io::BufReader::new(file);
             let exif_reader = exif::Reader::new();
             let exif;
+
             match exif_reader.read_from_container(&mut buf_reader) {
                 Ok(e) => { exif = e; },
-                Err(_) => { continue; }
+                Err(_) => {
+                    match raw::find_tiff_marker(&mut buf_reader) {
+                        Ok(v) => {  buf_reader.seek(SeekFrom::Start(v)); },
+                        Err(_) => { continue; },
+                    }
+                    match exif_reader.read_from_container(&mut buf_reader) {
+                        Ok(e) => { exif = e; },
+                        Err(_) => { continue; },
+                    }
+                }
             }
 
             target_photos.push((path, exif));
