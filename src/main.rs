@@ -1,3 +1,5 @@
+use clap::{ Parser , Subcommand};
+
 use std::collections::HashSet;
 use std::env;
 use std::fs;
@@ -9,16 +11,50 @@ mod camera_dir;
 mod raw;
 
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct CliArgs {
+    #[arg(
+        long = "show-diff",
+        short = 'd',
+        help = "Only show the difference",
+    )]
+    show_diff: bool,
+
+    #[arg(
+        help = "Path of your camera",
+    )]
+    camera_path: String,
+
+    #[arg(
+        help = "Directory to save",
+    )]
+    target_path: Option<String>,
+}
+
+
 fn main() {
-    let home_dir;
-    match env::var("HOME") {
-        Ok(v) => { home_dir = v; },
-        Err(_) => {
-            println!("Could not read $HOME.");
-            return
+    let cli_args = CliArgs::parse();
+
+    let camera_path = &cli_args.camera_path;
+    let target_path_string;
+    match cli_args.target_path {
+        Some(path_string) => {
+            target_path_string = path_string;
+        },
+        None => {
+            match env::var("HOME") {
+                Ok(home_path_string) => {
+                    target_path_string = home_path_string + "/Pictures";
+                },
+                Err(_) => {
+                    panic!("Please set $HOME or second argument<TARGET_PATH>")
+                }
+            }
         }
-    }
-    let default_taregt_path = home_dir + "/Pictures";
+    };
+    let target_path = &target_path_string;
+
     let default_enabled_ext_str = vec![
         "jpg",
         "JPG",
@@ -46,21 +82,6 @@ fn main() {
     ];
 
     let default_enabled_ext = default_enabled_ext_str.iter().map(|&str| str.to_string()).collect();
-
-
-    let args: Vec<String> = env::args().collect();
-    assert!(
-        args.len()-1==1 || args.len()-1==2,
-        "Expected args are 1 or 2, but given were {}.",
-        args.len()-1
-    );
-
-    let target_path = if args.len()-1 == 2 {
-        &args[2]
-    } else {
-        &default_taregt_path
-    };
-    let camera_path = &args[1];
     let enabled_ext = &default_enabled_ext;
 
     let camera_dir = CameraDir::new(camera_path, enabled_ext);

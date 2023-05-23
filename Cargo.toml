@@ -3,7 +3,14 @@ name = "photo-importer"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+repository = "https://github.com/takuminmin-m/photo-importer/"
+description = """
+A simple photo import tool
+
+You can copy photos into folders by date.
+This tool follows the folder naming rule of Luminar3.
+"""
 
 [dependencies]
+clap = { version = "4.3.0", features = ["derive"] }
 kamadak-exif = "0.5.5"
