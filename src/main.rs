@@ -123,6 +123,11 @@ fn main() {
             continue;
         }
 
+        if cli_args.show_diff {
+            println!("{:?} ---> {:?}", origin_path, new_path);
+            continue;
+        }
+
         print!("{:?} ---> {:?} | moving......", origin_path, new_path);
         match fs::create_dir_all(&target_photo_dir) {
             Ok(_) => (),
