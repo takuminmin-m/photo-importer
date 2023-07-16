@@ -1,0 +1,32 @@
+# .github/workflows/build.yml
+name: Build
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64-unknown-linux-musl] # TODO: support other platforms
+    steps:
+      - uses: actions/checkout@master
+      - name: Compile
+        id: compile
+        uses: rust-build/rust-build.action@v1.4.3
+        with:
+          RUSTTARGET: ${{ matrix.target }}
+          UPLOAD_MODE: none
+      - name: Upload binary
+        id: upload
+        run: |
+          cp ${{ steps.compile.outputs.BUILT_ARCHIVE }} ${{github.workspace}}/bin/photo-importer
+          git config user.name "takuminmin-m"
+          git config user.email "takuminmin0718@gmail.com"
+          git add .
+          git commit -m "build"
+          git push
