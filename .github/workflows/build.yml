@@ -25,14 +25,18 @@ jobs:
         id: upload
         run: |
           if [ -f ${{github.workspace}}/output/photo-importer ]; then
-            cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer
+            if [ ${{matrix.target}} = "x86_64-unknown-linux-musl" ]; then
+              cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer
+            elif [ ${{matrix.target}} = "x86_64-apple-darwin" ]; then
+              cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer-mac
+            fi
           elif [ -f ${{github.workspace}}/output/photo-importer.exe ]; then
             cp ${{github.workspace}}/output/photo-importer.exe ${{github.workspace}}/bin/photo-importer.exe
-          elif [ -f ${{github.workspace}}/output/photo-importer.app ]; then
-            cp ${{github.workspace}}/output/photo-importer.app ${{github.workspace}}/bin/photo-importer.app
+
           fi
           git config user.name "takuminmin-m"
           git config user.email "takuminmin0718@gmail.com"
+          git pull
           git add .
           git commit -m "build"
           git push
