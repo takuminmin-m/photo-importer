@@ -24,7 +24,7 @@ jobs:
       - name: Upload binary
         id: upload
         run: |
-          cp ${{ steps.compile.outputs.BUILT_ARCHIVE }} ${{github.workspace}}/bin/photo-importer
+          cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer
           git config user.name "takuminmin-m"
           git config user.email "takuminmin0718@gmail.com"
           git add .
