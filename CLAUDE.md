@@ -32,4 +32,4 @@ Things to know:
 
 ## CI / release binaries
 
-On every push to `main`, `.github/workflows/build.yml` cross-compiles for linux-musl, windows-gnu, and apple-darwin. It copies the binaries into `bin/` (`photo-importer`, `photo-importer.exe`, `photo-importer-mac`) and pushes them back to `main` as a commit titled `build`. Don't edit `bin/` by hand, and expect a CI `build` commit after each push. Pull before pushing again.
+On every push to `main`, `.github/workflows/build.yml` cross-compiles for linux-musl and windows-gnu on Ubuntu. A separate job on a macOS runner builds a universal (arm64 + x86_64) binary with `lipo`. Don't go back to the x86_64-only darwin build: it fails with "Bad CPU type" on Apple Silicon Macs without Rosetta. The workflow copies the binaries into `bin/` (`photo-importer`, `photo-importer.exe`, `photo-importer-mac`) and pushes them back to `main` as a commit titled `build`. Don't edit `bin/` by hand, and expect a CI `build` commit after each push. Pull before pushing again.

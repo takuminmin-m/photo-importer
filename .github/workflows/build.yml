@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-unknown-linux-musl, x86_64-pc-windows-gnu, x86_64-apple-darwin]
+        target: [x86_64-unknown-linux-musl, x86_64-pc-windows-gnu]
     steps:
       - uses: actions/checkout@master
       - name: Compile
@@ -25,18 +25,38 @@ jobs:
         id: upload
         run: |
           if [ -f ${{github.workspace}}/output/photo-importer ]; then
-            if [ ${{matrix.target}} = "x86_64-unknown-linux-musl" ]; then
-              cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer
-            elif [ ${{matrix.target}} = "x86_64-apple-darwin" ]; then
-              cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer-mac
-            fi
+            cp ${{github.workspace}}/output/photo-importer ${{github.workspace}}/bin/photo-importer
           elif [ -f ${{github.workspace}}/output/photo-importer.exe ]; then
             cp ${{github.workspace}}/output/photo-importer.exe ${{github.workspace}}/bin/photo-importer.exe
-
           fi
           git config user.name "takuminmin-m"
           git config user.email "takuminmin0718@gmail.com"
           git pull
           git add .
           git commit -m "build"
+          git push
+
+  # Built natively on macOS as a universal binary (arm64 + x86_64) so it runs on
+  # Apple Silicon without Rosetta.
+  build-macos:
+    name: Build universal-apple-darwin
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Compile
+        run: |
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+          cargo build --release --target x86_64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
+          lipo -create -output bin/photo-importer-mac \
+            target/x86_64-apple-darwin/release/photo-importer \
+            target/aarch64-apple-darwin/release/photo-importer
+          lipo -info bin/photo-importer-mac
+      - name: Upload binary
+        run: |
+          git config user.name "takuminmin-m"
+          git config user.email "takuminmin0718@gmail.com"
+          git add bin/photo-importer-mac
+          git commit -m "build"
+          git pull --rebase
           git push
